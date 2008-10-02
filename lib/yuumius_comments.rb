@@ -18,7 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'yuumius_comments'
-ActionView::Base.class_eval do
-	include YuumiusComments::ViewExtensions
+module YuumiusComments
+	mattr_accessor :host
+	@@host = "http://yuumi.us"
+	
+	module ViewExtensions
+		def yuumius_headers
+			return %Q(<script type="text/javascript" src="#{YuumiusComments.host}/javascripts/embedding/inline.js"></script>)
+		end
+		
+		def yuumius_comments(namespace)
+			if namespace.blank?
+				raise ArgumentError, "The 'namespace' argument may not be blank."
+			elsif namespace !~ /\A[a-z0-9_:]+\Z/i
+				raise ArgumentError, "The 'namespace' argument may only contain characters, numbers, underscores and colons."
+			elsif namespace.index(":") != namespace.rindex(":")
+				raise ArgumentError, "The 'namespace' argument may only contain a single colon."
+			end
+			return %Q(<script type="text/javascript" src="#{h yuumius_comments_url(namespace)}"></script>)
+		end
+	
+	private
+		def yuumius_comments_url(namespace)
+			return "#{YuumiusComments.host}/embeds/channels/#{h namespace}.js"
+		end
+	end
 end
